@@ -6,7 +6,11 @@ from pybricks.parameters import Port, Stop, Direction, Button, Color
 from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
+from pybricks.ev3devices import ColorSensor
 from time import sleep
+from pybricks.parameters import Port, Color
+
+
 
 # Configuration
 ev3 = EV3Brick()
@@ -20,7 +24,7 @@ elbow_sensor = ColorSensor(Port.S2)
 
 #Constants: positions and colors.
 LEFT = 204
-MIDLEFT = 155
+MIDLEFT = 155 #Kalibrera denna!!
 MIDDLE = 110
 MIDRIGHT = 66
 RIGHT = 8
@@ -38,10 +42,8 @@ color_names = {
 
 
 # Initializes the robot & rotates it to a starting position
-elbow_motor.run_target(60, 5)
 elbow_motor.run_time(-30, 1000)
 elbow_motor.run(15)
-# elbow_motor.run_until_stalled(200, then=Stop.COAST, duty_limit=50)
 while elbow_sensor.reflection() > 0:
     wait(10)
 elbow_motor.reset_angle(0)
@@ -53,9 +55,7 @@ base_motor.reset_angle(0)
 base_motor.hold()
 gripper_motor.run_until_stalled(200, then=Stop.COAST, duty_limit=50)
 gripper_motor.reset_angle(0)
-gripper_motor.run_target(1000, -20)
 gripper_motor.run_target(200, -90)
-ev3.speaker.say("Ready to go!")
 for i in range(3):
     wait(100)
 
@@ -69,7 +69,6 @@ def robot_pick(position):
     elbow_motor.run_target(60, -pickupheight)
     gripper_motor.run_until_stalled(200, then=Stop.HOLD, duty_limit=50)
     elbow_motor.run_target(60, 0)
-    # elbow_motor.run_time(10,500)
 
 
 def robot_release(position):
@@ -82,63 +81,33 @@ def robot_release(position):
     gripper_motor.run_target(200, -90)
     elbow_motor.run_target(60, 0)
 
+
+def read_color():
+    color_value = elbow_sensor.color()
+    color_name = color_names.get(color_value, "Unknown")
+    print(color_name)
+    return color_name
+
 def read_rgb_value():
     color_value = elbow_sensor.rgb()
-    color_name = elbow_sensor.color()
-    rgb_value = color_rgb_values.get(color_value)
-    print(color_value,rgb_value)
-    return color_value
+    #rgb_value = color_rgb_values.get(color_value, (0, 0, 0))
+    print(color_value)
 
-def calculate_rgb_ratio(rgb):
-    red, green, blue = rgb
-    # Avoid division by zero
-    # if blue > 2:
-    #     blue -= 2
-    if green == 0:
-        green = 1
-    if blue == 0:
-        blue = 1
-    if red == 0:
-        red = 1
-    
-    # Calculate ratios
-    red_green_ratio = red / green
-    red_blue_ratio = red / blue
-    green_red_ratio = green / red
-    green_blue_ratio = green / blue
-    blue_red_ratio = blue / red
-    blue_green_ratio = blue / green
-    
-    print(red_green_ratio, red_blue_ratio, green_red_ratio, green_blue_ratio, blue_red_ratio, blue_green_ratio)
-
-    if  red_green_ratio >= 1 and red_blue_ratio > 1 and green_red_ratio <= 1 and green_blue_ratio >= 1 and blue_red_ratio <= 1 and blue_green_ratio <= 1:
-        color = "Yellow"
-    if  red_green_ratio > 2 and red_blue_ratio > 2 and green_red_ratio <= 1 and green_blue_ratio >= 1 and blue_red_ratio <= 1 and blue_green_ratio <= 1:
-        color = "Red"
-    if  red_green_ratio <= 1 and red_blue_ratio <= 1 and green_red_ratio >= 1 and green_blue_ratio >= 1 and blue_red_ratio >= 1 and blue_green_ratio <= 1:
-        color = "Grön"
-    if  red_green_ratio <= 1 and red_blue_ratio < 1 and green_red_ratio >= 1 and green_blue_ratio < 1 and blue_red_ratio > 1 and blue_green_ratio > 1:
-        color = "Blue"
-    else:
-        color = "Fel!!"
-    print(color)
-    
 #Variables: Height, pickup-location and designated colors.
-pickupheight = 34
-dropheight = 34
+pickupheight = 32
+dropheight = 32
 pickupzone = RIGHT
 colorleft = "Blue"
 colormidleft = "Red"
 colormid = "Yellow"
 colormidright = "Orange"
 colorright = "Orange"
-emergency_stop = input("Nödstopp: ")
-while emergency_stop != 's':
+a = True
 
+while a == True:
     robot_pick(pickupzone)
-    rgb = read_rgb_value()
-    calculate_rgb_ratio(rgb)
-    robot_release(MIDDLE)
+    read_rgb_value()
+    robot_release(pickupzone)
 
     # color_name = read_color()
     # if color_name == colorleft:
@@ -153,5 +122,3 @@ while emergency_stop != 's':
     #     robot_release(RIGHT)
     # else:
     #     robot_release
-if emergency_stop == 's':
-    ev3.speaker.say("I'm blue Da ba dee da ba di")
