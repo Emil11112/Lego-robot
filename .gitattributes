@@ -85,8 +85,7 @@ def robot_release(position):
 def read_rgb_value():
     color_value = elbow_sensor.rgb()
     color_name = elbow_sensor.color()
-    rgb_value = color_rgb_values.get(color_value)
-    print(color_value,rgb_value)
+    print(color_value)
     return color_value
 
 def calculate_rgb_ratio(rgb):
@@ -113,28 +112,28 @@ def calculate_rgb_ratio(rgb):
 
     if  red_green_ratio >= 1 and red_blue_ratio > 1 and green_red_ratio <= 1 and green_blue_ratio >= 1 and blue_red_ratio <= 1 and blue_green_ratio <= 1:
         color = "Yellow"
-    if  red_green_ratio > 2 and red_blue_ratio > 2 and green_red_ratio <= 1 and green_blue_ratio >= 1 and blue_red_ratio <= 1 and blue_green_ratio <= 1:
+    if  red_green_ratio >= 2 and red_blue_ratio >= 2 and green_red_ratio <= 1 and green_blue_ratio >= 1 and blue_red_ratio <= 1 and blue_green_ratio <= 1:
         color = "Red"
     if  red_green_ratio <= 1 and red_blue_ratio <= 1 and green_red_ratio >= 1 and green_blue_ratio >= 1 and blue_red_ratio >= 1 and blue_green_ratio <= 1:
         color = "Grön"
     if  red_green_ratio <= 1 and red_blue_ratio < 1 and green_red_ratio >= 1 and green_blue_ratio < 1 and blue_red_ratio > 1 and blue_green_ratio > 1:
         color = "Blue"
     else:
-        color = "Fel!!"
+        color = "Fel!"
     print(color)
     
 #Variables: Height, pickup-location and designated colors.
 pickupheight = 34
 dropheight = 34
-pickupzone = RIGHT
+pickupzone = LEFT
 colorleft = "Blue"
 colormidleft = "Red"
 colormid = "Yellow"
 colormidright = "Orange"
 colorright = "Orange"
-emergency_stop = input("Nödstopp: ")
-while emergency_stop != 's':
+a = True
 
+while a == True:
     robot_pick(pickupzone)
     rgb = read_rgb_value()
     calculate_rgb_ratio(rgb)
@@ -153,5 +152,3 @@ while emergency_stop != 's':
     #     robot_release(RIGHT)
     # else:
     #     robot_release
-if emergency_stop == 's':
-    ev3.speaker.say("I'm blue Da ba dee da ba di")
