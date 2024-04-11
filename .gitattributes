@@ -19,23 +19,11 @@ base_switch = TouchSensor(Port.S1)
 elbow_sensor = ColorSensor(Port.S2)
 
 #Constants: positions and colors.
-LEFT = 204
-MIDLEFT = 155
-MIDDLE = 110
+LEFT = 206
+MIDLEFT = 159
+MIDDLE = 113
 MIDRIGHT = 66
 RIGHT = 8
-
-color_names = {
-    Color.BLACK: "Black",
-    Color.BLUE: "Blue",
-    Color.GREEN: "Green",
-    Color.YELLOW: "Yellow",
-    Color.RED: "Red",
-    Color.WHITE: "White",
-    Color.BROWN: "Brown",
-    Color.ORANGE: "Orange",
-}
-
 
 # Initializes the robot & rotates it to a starting position
 elbow_motor.run_target(60, 5)
@@ -92,8 +80,6 @@ def read_rgb_value():
 def calculate_rgb_ratio(rgb):
     red, green, blue = rgb
     # Avoid division by zero
-    # if blue > 2:
-    #     blue -= 2
     if green == 0:
         green = 1
     if blue == 0:
@@ -119,9 +105,8 @@ def calculate_rgb_ratio(rgb):
         color = "Grön"
     if  red_green_ratio <= 1 and red_blue_ratio < 1 and green_red_ratio >= 1 and green_blue_ratio < 1 and blue_red_ratio > 1 and blue_green_ratio > 1:
         color = "Blue"
-    # else:
-    #     color = "Fel!"
     print(color)
+    return color
     
 #Variables: Height, pickup-location and designated colors.
 pickupheight = 33
@@ -130,27 +115,24 @@ pickupzone = RIGHT
 colorleft = "Blue"
 colormidleft = "Red"
 colormid = "Yellow"
-colormidright = "Orange"
-colorright = "Orange"
+colormidright = "Green"
+colorright = ""
 a = True
+b = None
 
 while a == True:
+   
     robot_pick(pickupzone)
     rgb = read_rgb_value()
-    calculate_rgb_ratio(rgb)
-    robot_release(MIDDLE)
+    color_name = calculate_rgb_ratio(rgb)
 
-    # color_name = read_color()
-    # if color_name == colorleft:
-    #     robot_release(LEFT)
-    # elif color_name == colormidleft:
-    #     robot_release(MIDLEFT)
-    # elif color_name == colormid:
-    #     robot_release(MIDDLE)
-    # elif color_name == colormidright:
-    #     robot_release(MIDRIGHT)
-    # elif color_name == colorright:
-    #     robot_release(RIGHT)
-    # else:
-    #     robot_release
-    
+    if color_name == colorleft:
+        robot_release(LEFT)
+    elif color_name == colormidleft:
+        robot_release(MIDLEFT)
+    elif color_name == colormid:
+        robot_release(MIDDLE)
+    elif color_name == colormidright:
+        robot_release(MIDRIGHT)
+    elif color_name == colorright:
+        robot_release(RIGHT)
