@@ -7,14 +7,16 @@ from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
 from time import sleep
+from pybricks.messaging import BluetoothMailboxServer, TextMailbox, BluetoothMailboxClient
+import sys
 
 # Configuration
 ev3 = EV3Brick()
 gripper_motor = Motor(Port.A)
 elbow_motor = Motor(Port.B, Direction.COUNTERCLOCKWISE, [8, 40])
 base_motor = Motor(Port.C, Direction.COUNTERCLOCKWISE, [12, 36])
-elbow_motor.control.limits(speed=60, acceleration=80)
-base_motor.control.limits(speed=60, acceleration=80)
+elbow_motor.control.limits(speed=100, acceleration=100)
+base_motor.control.limits(speed=100, acceleration=100)
 base_switch = TouchSensor(Port.S1)
 elbow_sensor = ColorSensor(Port.S2)
 
@@ -24,54 +26,173 @@ MIDLEFT = 159
 MIDDLE = 113
 MIDRIGHT = 66
 RIGHT = 8
+#Variables: Height, pickup-location and designated colors.
+pickupheight = 33
+dropheight = 33
+pickupzone = RIGHT
+colorleft = "Blue"
+colormidleft = "Red"
+colormid = "Yellow"
+colormidright = "Green"
+colorright = ""
+a = True
 
-# Initializes the robot & rotates it to a starting position
-elbow_motor.run_target(60, 5)
-elbow_motor.run_time(-30, 2000)
-elbow_motor.run(15)
-# elbow_motor.run_until_stalled(200, then=Stop.COAST, duty_limit=50)
-while elbow_sensor.reflection() > 0:
-    wait(10)
-elbow_motor.run_time(15, 400)
-elbow_motor.reset_angle(0)
-elbow_motor.hold()
-base_motor.run(-60)
-while not base_switch.pressed():
-    wait(10)
-base_motor.reset_angle(0)
-base_motor.hold()
-gripper_motor.run_until_stalled(200, then=Stop.COAST, duty_limit=50)
-gripper_motor.reset_angle(0)
-gripper_motor.run_target(1000, -20)
-gripper_motor.run_target(200, -90)
-ev3.speaker.say("Ready to go!")
-for i in range(3):
-    wait(100)
-
+def init():# Initializes the robot & rotates it to a starting position
+    pressed = ev3.buttons.pressed()
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
+    elbow_motor.run_target(60, 5)
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
+    elbow_motor.run_time(-30, 2000)
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
+    elbow_motor.run(15)
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
+    # elbow_motor.run_until_stalled(200, then=Stop.COAST, duty_limit=50)
+    while elbow_sensor.reflection() > 0:
+        wait(10)
+        pressed = ev3.buttons.pressed()
+        if Button.UP in pressed:
+            pause()
+        if Button.CENTER in pressed:
+            emergency()
+    elbow_motor.run_time(15, 400)
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
+    elbow_motor.reset_angle(0)
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
+    elbow_motor.hold()
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
+    base_motor.run(-60)
+    while not base_switch.pressed():
+        wait(10)
+        pressed = ev3.buttons.pressed()
+        if Button.UP in pressed:
+            pause()
+        if Button.CENTER in pressed:
+            emergency()
+    base_motor.reset_angle(0)
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
+    base_motor.hold()
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
+    gripper_motor.run_until_stalled(200, then=Stop.COAST, duty_limit=50)
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
+    gripper_motor.reset_angle(0)
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
+    gripper_motor.run_target(1000, -20)
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
+    gripper_motor.run_target(200, -90)
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
+    ev3.speaker.say("")
 
 def robot_pick(position):
     # This function makes the robot base rotate to the indicated
-    # position. There it lowers the elbow, closes the gripper, and
+    # position. Then it lowers the elbow, closes the gripper, and
     # raises the elbow to pick up the object.
-
-    base_motor.run_target(60, position)
+    pressed = ev3.buttons.pressed()
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
+    base_move(position)
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
+    # base_motor.run_target(60, position) #Kan kommenteras bort om base_move funkar
     elbow_motor.run_target(60, -pickupheight)
-    gripper_motor.run_until_stalled(200, then=Stop.HOLD, duty_limit=50)
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
+    gripper_motor.run_until_stalled(200, then = Stop.HOLD, duty_limit = 50)
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
     elbow_motor.run_target(60, 0)
-    # elbow_motor.run_time(10,500)
-
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
+    # while base_motor.angle() != position:
+    #     pressed = ev3.buttons.pressed()
+    #     if Button.CENTER in pressed:
+    #         emergency()
+    #     if Button.UP in pressed:
+    #         pause()
 
 def robot_release(position):
     # This function makes the robot base rotate to the indicated
-    # position. There it lowers the elbow, opens the gripper to
+    # position. Then it lowers the elbow, opens the gripper to
     # release the object. Then it raises its arm again.
 
-    base_motor.run_target(60, position)
+    base_move(position)
+    pressed = ev3.buttons.pressed()
+    # base_motor.run_target(60, position) #Kan kommenteras bort om man använder base_move
     elbow_motor.run_target(60, -dropheight)
     gripper_motor.run_target(200, -90)
     elbow_motor.run_target(60, 0)
+    while base_motor.angle() != position:
+        if Button.CENTER in pressed:
+            emergency()
+        if Button.UP in pressed:
+            pause()
+
+def base_move(position):
+    pressed = ev3.buttons.pressed()
+    while base_motor.angle() != position:
+        base_motor.run_target(60, position , wait=False)
+        ev3.screen.draw_text(20,40,"Center: Stop")
+        ev3.screen.draw_text(20,80,"Up: Pause")
+        pressed = ev3.buttons.pressed()
+        if Button.UP in pressed:
+            pause()
+        if Button.CENTER in pressed:
+            emergency()
 
 def read_rgb_value():
+    pressed = ev3.buttons.pressed()
+    if Button.UP in pressed:
+        pause()
+    if Button.CENTER in pressed:
+        emergency()
     color_value = elbow_sensor.rgb()
     color_name = elbow_sensor.color()
     print(color_value)
@@ -86,7 +207,7 @@ def calculate_rgb_ratio(rgb):
         blue = 1
     if red == 0:
         red = 1
-    
+
     # Calculate ratios
     red_green_ratio = red / green
     red_blue_ratio = red / blue
@@ -94,46 +215,203 @@ def calculate_rgb_ratio(rgb):
     green_blue_ratio = green / blue
     blue_red_ratio = blue / red
     blue_green_ratio = blue / green
-    
-    print(red_green_ratio, red_blue_ratio, green_red_ratio, green_blue_ratio, blue_red_ratio, blue_green_ratio)
 
-    if  red_green_ratio >= 1 and red_blue_ratio > 1 and green_red_ratio <= 1 and green_blue_ratio >= 1 and blue_red_ratio <= 1 and blue_green_ratio <= 1:
-        color = "Yellow"
-    if  red_green_ratio >= 2 and red_blue_ratio >= 1.5 and green_red_ratio <= 1 and blue_red_ratio <= 1:
-        color = "Red"
-    if  red_green_ratio <= 1 and red_blue_ratio <= 1 and green_red_ratio >= 1 and green_blue_ratio >0.8  and blue_red_ratio >= 1 and blue_green_ratio < 1.2:
-        color = "Green"
-    if  red_green_ratio <= 1 and red_blue_ratio < 1 and green_red_ratio >= 1 and green_blue_ratio < 1 and blue_red_ratio > 1 and blue_green_ratio > 1:
-        color = "Blue"
+    # DELA STORA VÄRDEN MED SMÅ VÄRDEN FÖR ATT GÖRA STORA VÄRDEN
+
+    print(red_green_ratio, red_blue_ratio, green_red_ratio, green_blue_ratio, blue_red_ratio, blue_green_ratio)
+    try:
+        pressed = ev3.buttons.pressed()
+        if Button.UP in pressed:
+            pause()
+        if Button.CENTER in pressed:
+            emergency()
+        if  red_green_ratio >= 1 and red_blue_ratio > 1 and green_red_ratio <= 1 and green_blue_ratio >= 1 and blue_red_ratio <= 1 and blue_green_ratio <= 1:
+            color = "Yellow"
+        if  red_green_ratio >= 2.5 and red_blue_ratio >= 1.5 and green_red_ratio <= 1 and blue_red_ratio <= 1:
+            color = "Red"
+        if  red_green_ratio <= 1 and red_blue_ratio <= 1 and green_red_ratio >= 1 and green_blue_ratio > 0.8  and blue_red_ratio >= 1 and blue_green_ratio < 1.5:
+            color = "Green"
+        if  red_green_ratio <= 1 and red_blue_ratio < 1 and green_red_ratio >= 1 and green_blue_ratio < 1 and blue_red_ratio > 1 and blue_green_ratio > 1:
+            color = "Blue"
+        if (red_green_ratio >= 0.9 and red_green_ratio <= 1.1 and red_blue_ratio >= 0.9 and red_blue_ratio <= 1.1 and
+            green_red_ratio >= 0.9 and green_red_ratio <= 1.1 and green_blue_ratio >= 0.9 and green_blue_ratio <= 1.1 and
+            blue_red_ratio >= 0.9 and blue_red_ratio <= 1.1 and blue_green_ratio >= 0.9 and blue_green_ratio <= 1.1):
+                color = "No color"
+    except:
+        print("Error")
     print(color)
     ev3.speaker.say(color)
     return color
-    
-#Variables: Height, pickup-location and designated colors.
-pickupheight = 33
-dropheight = 33
-pickupzone = RIGHT
-colorleft = "Blue"
-colormidleft = "Red"
-colormid = "Yellow"
-colormidright = "Green"
-colorright = ""
-a = True
-b = None
 
-while a == True:
-   
-    robot_pick(pickupzone)
-    rgb = read_rgb_value()
-    color_name = calculate_rgb_ratio(rgb)
+def pause():
+    pressed = ev3.buttons.pressed()
+    ev3.speaker.say("Pausing")
+    while Button.DOWN not in pressed:
+        pressed = ev3.buttons.pressed()
+        base_motor.hold()
+        elbow_motor.hold()
+        ev3.screen.draw_text(1, 44, "Push the down")
+        ev3.screen.draw_text(1, 64, "button to continue")
+        gripper_motor.hold()
+        ev3.screen.draw_text(1, 44, "Push the down")
+        ev3.screen.draw_text(1, 64, "button to continue")
+        elbow_motor.hold()
+        ev3.screen.clear()
+        ev3.screen.draw_text(1, 44, "Push the down")
+        ev3.screen.draw_text(1, 64, "button to continue")
+        if Button.CENTER in pressed:
+            emergency()
+        if Button.DOWN in pressed:
+            ev3.speaker.say("Unpausing")
 
-    if color_name == colorleft:
-        robot_release(LEFT)
-    elif color_name == colormidleft:
-        robot_release(MIDLEFT)
-    elif color_name == colormid:
-        robot_release(MIDDLE)
-    elif color_name == colormidright:
-        robot_release(MIDRIGHT)
-    elif color_name == colorright:
-        robot_release(RIGHT)
+def emergency():
+    ev3.speaker.say("Stopping")
+    elbow_motor.run_time(-10, 5000)
+    gripper_motor.reset_angle(0)
+    gripper_motor.run_target(1000, -20)
+    gripper_motor.run_target(200, -90)
+    sys.exit(0)
+
+def establish_connection(state):
+    if state is True:
+        server = BluetoothMailboxServer()
+        server.wait_for_connection(1)
+        print("Server established!")
+        mbox = TextMailbox("mbox", server)
+        while True:
+            wait(2000)
+            msg = mbox.wait_new()
+            if msg == "ping":
+                mbox.send("pong")
+                return mbox
+    else:
+        while True:
+            try:
+                client = BluetoothMailboxClient()
+                client.connect("ev3dev")
+                mbox = TextMailbox("mbox", client)
+                print("Test")
+                pressed = ev3.buttons.pressed()
+                while True:
+                    pressed = ev3.buttons.pressed()
+                    if Button.CENTER in pressed:
+                        emergency()
+                    if Button.UP in pressed:
+                        pause()
+                    wait(2000)
+                    mbox.send("ping")
+                    print("ping")
+                    msg = mbox.wait_new()
+                    if msg == "pong":
+                        return mbox
+            except:
+                pressed = ev3.buttons.pressed()
+                print("Waiting for connection")
+                if Button.CENTER in pressed:
+                    emergency()
+                if Button.UP in pressed:
+                    pause()
+
+def recieve_occupied(mbox): # supposed to recieve true if location is occupied
+        location_msg = mbox.read()
+        if location_msg == "False":
+            return False
+        else:
+            return True
+
+def send_occupied(mbox): # supposed to send true if location is occupied
+    msg = "True"
+    mbox.send(msg)
+
+def send_unoccupied(mbox): # supposed to send false if location is unoccupied
+    msg = "False"
+    mbox.send(msg)
+
+def mainmulti():
+    ev3.screen.clear()
+    global mbox
+    pressed = ev3.buttons.pressed()
+    mbox = establish_connection(False)
+    while True:
+        # Server skickar in true, client skickar in false i mbox
+        wait(3000)
+        busy = recieve_occupied(mbox)
+        if busy == False:
+            send_occupied(mbox)
+            robot_pick(pickupzone)
+            rgb = read_rgb_value()
+            color_name = calculate_rgb_ratio(rgb)
+            if Button.CENTER in pressed:
+                emergency()
+            if Button.UP in pressed:
+                pause()
+            if color_name == colorleft:
+                robot_release(LEFT)
+                send_unoccupied(mbox)
+            elif color_name == colormidleft:
+                robot_release(MIDLEFT)
+                send_unoccupied(mbox)
+            elif color_name == colormid:
+                robot_release(MIDDLE)
+                send_unoccupied(mbox)
+            elif color_name == colormidright:
+                robot_release(MIDRIGHT)
+                send_unoccupied(mbox)
+            elif color_name == colorright:
+                robot_release(RIGHT)
+                send_unoccupied(mbox)
+            elif color_name == "No color":
+                gripper_motor.run_target(1000, -90)
+            if Button.CENTER in pressed:
+                emergency()
+            if Button.UP in pressed:
+                pause()
+            if busy == True:
+                wait(300)
+
+def mainsingle():
+    ev3.screen.clear()
+    init()
+    while a == True:
+        pressed = ev3.buttons.pressed()
+        if Button.CENTER in pressed:
+            emergency()
+        if Button.UP in pressed:
+            pause()
+        robot_pick(pickupzone)
+        rgb = read_rgb_value()
+        color_name = calculate_rgb_ratio(rgb)
+
+        if Button.CENTER in pressed:
+            emergency()
+        if Button.UP in pressed:
+            pause()
+        if color_name == colorleft:
+            robot_release(LEFT)
+        elif color_name == colormidleft:
+            robot_release(MIDLEFT)
+        elif color_name == colormid:
+            robot_release(MIDDLE)
+        elif color_name == colormidright:
+            robot_release(MIDRIGHT)
+        elif color_name == colorright:
+            robot_release(RIGHT)
+        elif color_name == "No color":
+            gripper_motor.run_target(1000, -90)
+        if Button.CENTER in pressed:
+            emergency()
+        if Button.UP in pressed:
+            pause()
+
+def menu():
+    pressed = ev3.buttons.pressed()
+    print("Press a button")
+    while Button.UP or Button.DOWN not in pressed:
+        pressed = ev3.buttons.pressed()
+        ev3.screen.draw_text(12, 20, "Up: Multiplayer")
+        ev3.screen.draw_text(12, 50, "Down: Singleplayer")
+        if Button.UP in pressed:
+            mainmulti()
+        if Button.DOWN in pressed:
+            mainsingle()
+menu()
