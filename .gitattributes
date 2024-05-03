@@ -27,8 +27,8 @@ MIDDLE = 113
 MIDRIGHT = 66
 RIGHT = 8
 #Variables: Height, pickup-location and designated colors.
-pickupheight = 33
-dropheight = 33
+# pickupheight = 33
+# dropheight = 33
 pickupzone = RIGHT
 colorleft = "Blue"
 colormidleft = "Red"
@@ -66,7 +66,7 @@ def init():# Initializes the robot & rotates it to a starting position
             pause()
         if Button.CENTER in pressed:
             emergency()
-    elbow_motor.run_time(15, 400)
+    elbow_motor.run_time(15, 250)
     if Button.UP in pressed:
         pause()
     if Button.CENTER in pressed:
@@ -121,7 +121,7 @@ def init():# Initializes the robot & rotates it to a starting position
         emergency()
     ev3.speaker.say("")
 
-def robot_pick(position):
+def robot_pick(position, pickup_height):
     # This function makes the robot base rotate to the indicated
     # position. Then it lowers the elbow, closes the gripper, and
     # raises the elbow to pick up the object.
@@ -136,7 +136,7 @@ def robot_pick(position):
     if Button.CENTER in pressed:
         emergency()
     # base_motor.run_target(60, position) #Kan kommenteras bort om base_move funkar
-    elbow_motor.run_target(60, -pickupheight)
+    elbow_motor.run_target(60, -pickup_height)
     if Button.UP in pressed:
         pause()
     if Button.CENTER in pressed:
@@ -158,7 +158,7 @@ def robot_pick(position):
     #     if Button.UP in pressed:
     #         pause()
 
-def robot_release(position):
+def robot_release(position, drop_height):
     # This function makes the robot base rotate to the indicated
     # position. Then it lowers the elbow, opens the gripper to
     # release the object. Then it raises its arm again.
@@ -166,7 +166,7 @@ def robot_release(position):
     base_move(position)
     pressed = ev3.buttons.pressed()
     # base_motor.run_target(60, position) #Kan kommenteras bort om man använder base_move
-    elbow_motor.run_target(60, -dropheight)
+    elbow_motor.run_target(60, -drop_height)
     gripper_motor.run_target(200, -90)
     elbow_motor.run_target(60, 0)
     while base_motor.angle() != position:
@@ -233,9 +233,9 @@ def calculate_rgb_ratio(rgb):
             color = "Green"
         if  red_green_ratio <= 1 and red_blue_ratio < 1 and green_red_ratio >= 1 and green_blue_ratio < 1 and blue_red_ratio > 1 and blue_green_ratio > 1:
             color = "Blue"
-        if (red_green_ratio >= 0.9 and red_green_ratio <= 1.1 and red_blue_ratio >= 0.9 and red_blue_ratio <= 1.1 and
-            green_red_ratio >= 0.9 and green_red_ratio <= 1.1 and green_blue_ratio >= 0.9 and green_blue_ratio <= 1.1 and
-            blue_red_ratio >= 0.9 and blue_red_ratio <= 1.1 and blue_green_ratio >= 0.9 and blue_green_ratio <= 1.1):
+        if (red_green_ratio >= 0.8 and red_green_ratio <= 1.15 and red_blue_ratio >= 0.8 and red_blue_ratio <= 1.15 and
+            green_red_ratio >= 0.8 and green_red_ratio <= 1.15 and green_blue_ratio >= 0.8 and green_blue_ratio <= 1.15 and
+            blue_red_ratio >= 0.8 and blue_red_ratio <= 1.15 and blue_green_ratio >= 0.8 and blue_green_ratio <= 1.15):
                 color = "No color"
     except:
         print("Error")
@@ -263,6 +263,7 @@ def pause():
             emergency()
         if Button.DOWN in pressed:
             ev3.speaker.say("Unpausing")
+            ev3.screen.clear()
 
 def emergency():
     ev3.speaker.say("Stopping")
@@ -327,8 +328,43 @@ def send_unoccupied(mbox): # supposed to send false if location is unoccupied
     msg = "False"
     mbox.send(msg)
 
+def pickheight():
+    pressed = ev3.buttons.pressed()
+    print("Choose pickheight")
+    while Button.RIGHT or Button.LEFT not in pressed:
+        pressed = ev3.buttons.pressed()
+        ev3.screen.draw_text(12, 20, "LEFT: Elevated")
+        ev3.screen.draw_text(12, 50, "RIGHT: Base")
+        if Button.LEFT in pressed:
+            ev3.screen.clear()
+            new_height = 13
+            return new_height
+        if Button.RIGHT in pressed:
+            ev3.screen.clear()
+            new_height = 33
+            return new_height
+
+def dropheight():
+    wait(300)
+    pressed = ev3.buttons.pressed()
+    print("Choose dropheight")
+    while Button.LEFT or Button.RIGHT not in pressed:
+        pressed = ev3.buttons.pressed()
+        ev3.screen.draw_text(12, 20, "Left: Elevated")
+        ev3.screen.draw_text(12, 50, "Right: Base")
+        if Button.RIGHT in pressed:
+            ev3.screen.clear()
+            new_height = 33
+            return new_height
+        if Button.LEFT in pressed:
+            ev3.screen.clear()
+            new_height = 13
+            return new_height
+
 def mainmulti():
     ev3.screen.clear()
+    pickup_height = pickheight()
+    drop_height = dropheight()
     global mbox
     pressed = ev3.buttons.pressed()
     mbox = establish_connection(False)
@@ -338,7 +374,7 @@ def mainmulti():
         busy = recieve_occupied(mbox)
         if busy == False:
             send_occupied(mbox)
-            robot_pick(pickupzone)
+            robot_pick(pickupzone, pickup_height)
             rgb = read_rgb_value()
             color_name = calculate_rgb_ratio(rgb)
             if Button.CENTER in pressed:
@@ -346,19 +382,19 @@ def mainmulti():
             if Button.UP in pressed:
                 pause()
             if color_name == colorleft:
-                robot_release(LEFT)
+                robot_release(LEFT, drop_height)
                 send_unoccupied(mbox)
             elif color_name == colormidleft:
-                robot_release(MIDLEFT)
+                robot_release(MIDLEFT, drop_height)
                 send_unoccupied(mbox)
             elif color_name == colormid:
-                robot_release(MIDDLE)
+                robot_release(MIDDLE, drop_height)
                 send_unoccupied(mbox)
             elif color_name == colormidright:
-                robot_release(MIDRIGHT)
+                robot_release(MIDRIGHT, drop_height)
                 send_unoccupied(mbox)
             elif color_name == colorright:
-                robot_release(RIGHT)
+                robot_release(RIGHT, drop_height)
                 send_unoccupied(mbox)
             elif color_name == "No color":
                 gripper_motor.run_target(1000, -90)
@@ -371,6 +407,8 @@ def mainmulti():
 
 def mainsingle():
     ev3.screen.clear()
+    pickup_height = pickheight()
+    drop_height = dropheight()
     init()
     while a == True:
         pressed = ev3.buttons.pressed()
@@ -378,7 +416,7 @@ def mainsingle():
             emergency()
         if Button.UP in pressed:
             pause()
-        robot_pick(pickupzone)
+        robot_pick(pickupzone, pickup_height)
         rgb = read_rgb_value()
         color_name = calculate_rgb_ratio(rgb)
 
@@ -387,15 +425,15 @@ def mainsingle():
         if Button.UP in pressed:
             pause()
         if color_name == colorleft:
-            robot_release(LEFT)
+            robot_release(LEFT, drop_height)
         elif color_name == colormidleft:
-            robot_release(MIDLEFT)
+            robot_release(MIDLEFT, drop_height)
         elif color_name == colormid:
-            robot_release(MIDDLE)
+            robot_release(MIDDLE, drop_height)
         elif color_name == colormidright:
-            robot_release(MIDRIGHT)
+            robot_release(MIDRIGHT, drop_height)
         elif color_name == colorright:
-            robot_release(RIGHT)
+            robot_release(RIGHT, drop_height)
         elif color_name == "No color":
             gripper_motor.run_target(1000, -90)
         if Button.CENTER in pressed:
@@ -405,13 +443,14 @@ def mainsingle():
 
 def menu():
     pressed = ev3.buttons.pressed()
-    print("Press a button")
+    print("Choose mode")
     while Button.UP or Button.DOWN not in pressed:
         pressed = ev3.buttons.pressed()
-        ev3.screen.draw_text(12, 20, "Up: Multiplayer")
-        ev3.screen.draw_text(12, 50, "Down: Singleplayer")
+        ev3.screen.draw_text(1, 20, "Up: Multiplayer")
+        ev3.screen.draw_text(1, 50, "Down: Singleplayer")
         if Button.UP in pressed:
             mainmulti()
         if Button.DOWN in pressed:
             mainsingle()
 menu()
+
