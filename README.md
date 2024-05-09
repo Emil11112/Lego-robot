@@ -38,3 +38,10 @@ US14: The pickup task of the robot will be able to follow a set schedule set by 
 US15: The robot will have an emergency stop-button for emergencies that safely terminates the movement without injuring the package.
 
 US16: The robot will be able to pick up an item at point A, and within 5 seconds be able to safely drop it off at point B.
+
+US17: the robot will be able to safely pick up items from a moving belt and put them down at a designated location based on color and shape.
+
+US18: The robot will have a pause button that pauses all actions when pressed and resumes the operation when pressed again.
+
+US19: The robot shall have a very nice dashboard so the customer easily can configure and execute tasks on demand.
+
